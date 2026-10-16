@@ -64,6 +64,10 @@ nzz-contextai/
 │       ├── api.js         # API client (streaming, config, topics)
 │       ├── i18n.jsx       # DE / EN translations
 │       └── theme.js       # Light / dark theme tokens
+├── ocr/                   # DSPRO2: Fraktur OCR (preprocessing, baseline, fine-tuning)
+├── layout/                # DSPRO2: column/line/article segmentation, reassembly
+├── normalization/         # DSPRO2: historical spelling normalization
+├── eval/                  # DSPRO2: CER/WER evaluation module
 ├── scripts/
 │   └── build_expected_answers.py  # Generate reference answers for ground truth
 ├── notebooks/
@@ -76,6 +80,7 @@ nzz-contextai/
 ├── data/
 │   ├── raw/                       # NZZ JSON source files (not in git)
 │   ├── chroma/                    # ChromaDB vector store (not in git)
+│   ├── zenodo/                    # Zenodo Fraktur ground truth (data not in git)
 │   └── eval/
 │       └── ground_truth.jsonl     # Evaluation queries with reference answers
 ├── media/                         # Screenshots for README

@@ -20,6 +20,12 @@ env/
 # ─── Data ─────────────────────────────────────────────────────────────────────
 data/raw/
 data/chroma/
+data/raw_ocr/
+data/zenodo/*
+!data/zenodo/README.md
+data/nzz_scans/
+*.tif
+*.tiff
 
 # ─── MLflow ───────────────────────────────────────────────────────────────────
 mlruns/
@@ -51,6 +57,10 @@ Thumbs.db
 *.h5
 *.safetensors
 *.gguf
+*.ckpt
+*.mlmodel
+models/
+checkpoints/
 
 # ─── Logs & Temp ──────────────────────────────────────────────────────────────
 logs/
