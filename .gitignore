@@ -43,6 +43,7 @@ mlartifacts/
 .vscode/
 .cursor/
 .claude/
+CLAUDE.md
 *.DS_Store
 Thumbs.db
 *:Zone.Identifier
