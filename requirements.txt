@@ -43,3 +43,10 @@ ipykernel>=6.29.0
 # ─── Testing ──────────────────────────────────────────────────────────────────
 pytest>=8.0.0
 pytest-cov>=5.0.0
+
+# ─── OCR / VLM transcription (DSPRO2) ─────────────────────────────────────────
+pymupdf>=1.24.0          # PDF page scans
+rapidfuzz>=3.0.0         # CER/WER, text alignment
+accelerate>=1.0.0        # device_map for VLMs
+torchvision              # required by the Qwen-VL processors
+# bitsandbytes           # optional: --load-4bit for ~32B models

@@ -24,6 +24,10 @@ data/raw_ocr/
 data/zenodo/*
 !data/zenodo/README.md
 data/nzz_scans/
+data/nzz_zips/
+data/exploration/
+data/vlm_ocr/
+data/hub_bundle*
 *.tif
 *.tiff
 
