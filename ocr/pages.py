@@ -87,19 +87,3 @@ def split_rows(img: Image.Image, n: int, window: float = 0.05) -> list:
         cuts.append(int(lo + np.argmin(ink[lo:hi])) if hi > lo else centre)
     cuts.append(h)
     return [img.crop((0, a, img.width, b)) for a, b in zip(cuts, cuts[1:])]
-
-
-def zenodo_pages(gt_dir: Path, root: Path = SCANS_DIR) -> list:
-    """huGO pages that also have human-corrected Zenodo ground truth (same date and page number).
-
-    Returns (PageRef, zenodo_xml_path) pairs; Zenodo ids look like ``nzz_17800719_0_0_a1_p1_1``.
-    """
-    import re
-
-    out = []
-    for xml in sorted(gt_dir.glob("nzz_*.xml")):
-        y, m, d, p = re.match(r"nzz_(\d{4})(\d{2})(\d{2})_\d_\d_[a-z]\d+_p(\d+)_", xml.stem).groups()
-        pdfs = sorted((root / "NZZ_Neue_Zürcher_Zeitung" / y / f"{y}-{m}-{d}").glob(f"*/*-{int(p):05d}.pdf"))
-        if int(y) <= 1815 and pdfs:
-            out.append((PageRef(pdfs[0].stem, int(y), pdfs[0]), xml))
-    return out

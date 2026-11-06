@@ -21,8 +21,6 @@ env/
 data/raw/
 data/chroma/
 data/raw_ocr/
-data/zenodo/*
-!data/zenodo/README.md
 data/nzz_scans/
 data/nzz_zips/
 data/exploration/

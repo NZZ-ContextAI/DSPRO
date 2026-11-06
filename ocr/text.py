@@ -44,7 +44,7 @@ def line_cer(gt_lines, hyp: str, min_len: int = 8) -> float:
     from rapidfuzz import fuzz
 
     def light(s):
-        # "¬" is the Zenodo marker for a line-end hyphen
+        # "¬" marks a line-end hyphen
         return " ".join(unicodedata.normalize("NFC", s).replace("\u017f", "s").replace("\u00ac", "-").split())
 
     hyp = light(hyp)

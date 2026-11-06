@@ -1,15 +1,11 @@
 SHELL := /bin/bash
 NVM   := export NVM_DIR="$$HOME/.nvm" && . "$$HOME/.nvm/nvm.sh"
 
-.PHONY: setup zenodo ingest experiment demo mlflow test api frontend dev
+.PHONY: setup ingest experiment demo mlflow test api frontend dev
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 setup:
 	.venv/bin/python src/setup_models.py
-
-# ─── Data (DSPRO2) ────────────────────────────────────────────────────────────
-zenodo:
-	.venv/bin/python scripts/download_zenodo.py
 
 # ─── Pipeline ─────────────────────────────────────────────────────────────────
 ingest:

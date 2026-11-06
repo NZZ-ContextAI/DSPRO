@@ -76,14 +76,6 @@ def main() -> None:
               f"{probe['mb'].mean():.2f} MB/page, NZZ-OCR letter ratio {probe['alpha'].mean():.2f}")
     per_year.round(2).to_csv(args.out / "summary.csv")
 
-    gt_xml = next(Path("data/zenodo/extracted").glob("*/xml/NZZ_groundtruth"), None)
-    if gt_xml:
-        gt_dates = {re.search(r"nzz_(\d{8})", p.stem).group(1) for p in gt_xml.glob("*.xml")}
-        gt_dates = {f"{d[:4]}-{d[4:6]}-{d[6:]}" for d in gt_dates if 1780 <= int(d[:4]) <= 1815}
-        overlap = gt_dates & set(df["datum"])
-        print(f"\nZenodo GT pages 1780-1815: {len(gt_dates)} dates, {len(overlap)} also in huGO "
-              f"-> usable for a real CER benchmark: {sorted(overlap)[:5]}")
-
     fig, ax = plt.subplots(1, 3, figsize=(15, 3.8))
     per_year["pages"].plot.bar(ax=ax[0], title="pages per year", width=0.8)
     per_year["ocr_chars_mean"].plot(ax=ax[1], title="mean NZZ OCR characters per page")

@@ -80,7 +80,6 @@ nzz-contextai/
 ├── data/
 │   ├── raw/                       # NZZ JSON source files (not in git)
 │   ├── chroma/                    # ChromaDB vector store (not in git)
-│   ├── zenodo/                    # Zenodo Fraktur ground truth (data not in git)
 │   └── eval/
 │       └── ground_truth.jsonl     # Evaluation queries with reference answers
 ├── media/                         # Screenshots for README
