@@ -24,6 +24,7 @@ data/raw_ocr/
 data/zenodo/*
 !data/zenodo/README.md
 data/nzz_scans/
+data/historical/
 *.tif
 *.tiff
 
