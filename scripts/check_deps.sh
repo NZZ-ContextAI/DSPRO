@@ -39,4 +39,14 @@ pdftoppm_path=$(which pdftoppm 2>/dev/null)
 report "poppler (pdftoppm)" $([ -n "$pdftoppm_path" ] && echo 0 || echo 1) "($pdftoppm_path)" \
     "- install: brew install poppler / apt install poppler-utils"
 
+# optional engines for the benchmark (scripts/ocr_benchmark.py); missing ones do not fail the check
+optional() {  # optional <label> <binary>
+    p=$(which "$2" 2>/dev/null)
+    if [ -n "$p" ]; then echo "[OK]      $1 ($p)"; else echo "[OPTIONAL] $1 not found - $3"; fi
+}
+optional "kraken" "${KRAKEN_BIN:-kraken}" "pip install kraken (own venv), or set KRAKEN_BIN"
+optional "calamari" "${CALAMARI_BIN:-calamari-predict}" "pip install calamari-ocr (own venv), or set CALAMARI_BIN"
+python3 -c "import pytesseract" 2>/dev/null && echo "[OK]      pytesseract" \
+    || { echo "[MISSING] pytesseract - pip install -r requirements.txt"; missing=1; }
+
 exit $missing
