@@ -105,6 +105,13 @@ source .venv/bin/activate   # Linux/Mac
 pip install -r requirements.txt
 ```
 
+### 1b. Check OCR system dependencies
+Tesseract (with Fraktur tessdata) and poppler are system packages, not pip packages.
+Run this before any OCR code:
+```bash
+bash scripts/check_deps.sh
+```
+
 ### 2. Install Ollama and download models
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
