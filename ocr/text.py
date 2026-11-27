@@ -60,7 +60,7 @@ def line_cer(ref_lines, hypothesis: str, min_len: int = 8) -> float:
 
     def light(s):
         # "¬" marks a line-end hyphen in some ground truths
-        return " ".join(unicodedata.normalize("NFC", s).replace("ſ", "s").replace("¬", "-").split())
+        return " ".join(unicodedata.normalize("NFC", s).translate(GOLD_CONVENTIONS).split())
 
     hyp = light(hypothesis)
     dist = total = 0
@@ -78,13 +78,25 @@ def evaluate_page(reference: str, hypothesis: str, norm: bool = False) -> dict:
     return {"cer": cer(reference, hypothesis, norm), "wer": wer(reference, hypothesis, norm)}
 
 
+# Glyphs an engine may output where the gold transcription uses a plain character. Choosing ſ or
+# the Fraktur hyphen ⸗ is a transcription convention, not a reading error.
+GOLD_CONVENTIONS = str.maketrans({"ſ": "s", "⸗": "-", "¬": "-"})
+
+
+def to_gold_conventions(text: str) -> str:
+    """Map engine-specific glyphs to the conventions of the gold set (s for long s, - for hyphens)."""
+    return unicodedata.normalize("NFC", text).translate(GOLD_CONVENTIONS)
+
+
 def score(reference: str, hypothesis: str) -> dict:
     """All rates used by the benchmark for one tile or page.
 
-    ``cer``/``wer``: diplomatic, in order. ``cer_norm``: after ``normalize``. ``recall_cer``:
-    missing or misread reference text, ``precision_cer``: invented or duplicated text (both
-    ignore reading order).
+    The hypothesis is first mapped to the gold conventions (``to_gold_conventions``).
+    ``cer``/``wer``: in order, every other character counts. ``cer_norm``: after ``normalize``.
+    ``recall_cer``: missing or misread reference text, ``precision_cer``: invented or duplicated
+    text (both ignore reading order).
     """
+    hypothesis = to_gold_conventions(hypothesis)
     return {
         "cer": cer(reference, hypothesis),
         "wer": wer(reference, hypothesis),

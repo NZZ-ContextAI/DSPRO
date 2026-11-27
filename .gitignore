@@ -25,6 +25,7 @@ data/zenodo/*
 !data/zenodo/README.md
 data/nzz_scans/
 data/historical/
+data/ocr_benchmark/
 *.tif
 *.tiff
 

@@ -1,6 +1,6 @@
 import pytest
 
-from ocr.text import cer, evaluate_page, line_cer, normalize, score, wer
+from ocr.text import cer, evaluate_page, line_cer, normalize, score, to_gold_conventions, wer
 
 
 def test_perfect_match():
@@ -53,3 +53,8 @@ def test_line_cer_ignores_column_order():
 
 def test_score_keys():
     assert set(score("ab cd", "ab cx")) == {"cer", "wer", "cer_norm", "recall_cer", "precision_cer"}
+
+
+def test_score_maps_engine_glyphs_to_gold_conventions():
+    assert to_gold_conventions("unſerm Rich⸗") == "unserm Rich-"
+    assert score("in unserm Blatte, ha-", "in unſerm Blatte, ha⸗")["cer"] == 0.0

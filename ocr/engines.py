@@ -37,7 +37,11 @@ class Engine:
         return "".join(c if c.isalnum() or c in "-." else "_" for c in self.spec).strip("_")
 
     def transcribe(self, image: Image.Image) -> str:
-        raise NotImplementedError
+        return self.transcribe_many([image])[0]
+
+    def transcribe_many(self, images: list) -> list:
+        """Several images at once; engines with a slow start (model loading) override this."""
+        return [self.transcribe(img) for img in images]
 
     def settings(self) -> dict:
         """Parameters worth recording next to the output (and in MLflow)."""
@@ -72,15 +76,21 @@ def _run(cmd: list) -> None:
         raise RuntimeError(f"{' '.join(map(str, cmd))} failed ({proc.returncode}):\n{proc.stderr[-2000:]}")
 
 
-def kraken_segment(image: Image.Image, kraken_bin: str = None) -> list:
-    """Baseline segmentation with Kraken's default model; returns the line polygons in reading order."""
+def kraken_segment(images: list, kraken_bin: str = None) -> list:
+    """Baseline segmentation with Kraken's default model, one call for all images.
+
+    Returns one list of line polygons per image, in the order Kraken lists the lines.
+    """
     kraken_bin = kraken_bin or os.environ.get("KRAKEN_BIN", "kraken")
     with tempfile.TemporaryDirectory() as tmp:
-        src, out = Path(tmp) / "in.png", Path(tmp) / "seg.json"
-        image.save(src)
-        _run([kraken_bin, "-i", str(src), str(out), "segment", "-bl"])
-        seg = json.loads(out.read_text(encoding="utf-8"))
-    return [line["boundary"] for line in seg.get("lines", []) if line.get("boundary")]
+        pairs = []
+        for i, img in enumerate(images):
+            src, out = Path(tmp) / f"in_{i:03d}.png", Path(tmp) / f"seg_{i:03d}.json"
+            img.save(src)
+            pairs += ["-i", str(src), str(out)]
+        _run([kraken_bin, "-r", *pairs, "segment", "-bl"])
+        segs = [json.loads((Path(tmp) / f"seg_{i:03d}.json").read_text(encoding="utf-8")) for i in range(len(images))]
+    return [[line["boundary"] for line in seg.get("lines", []) if line.get("boundary")] for seg in segs]
 
 
 def crop_line(image: Image.Image, boundary, pad: int = 2) -> Image.Image:
@@ -100,13 +110,16 @@ class KrakenEngine(Engine):
     def spec(self) -> str:
         return f"kraken:{Path(self.model).stem}"
 
-    def transcribe(self, image: Image.Image) -> str:
+    def transcribe_many(self, images: list) -> list:
         kraken_bin = self.kraken_bin or os.environ.get("KRAKEN_BIN", "kraken")
         with tempfile.TemporaryDirectory() as tmp:
-            src, out = Path(tmp) / "in.png", Path(tmp) / "out.txt"
-            image.save(src)
-            _run([kraken_bin, "-i", str(src), str(out), "segment", "-bl", "ocr", "-m", self.model])
-            return out.read_text(encoding="utf-8").strip()
+            pairs = []
+            for i, img in enumerate(images):
+                src, out = Path(tmp) / f"in_{i:03d}.png", Path(tmp) / f"out_{i:03d}.txt"
+                img.save(src)
+                pairs += ["-i", str(src), str(out)]
+            _run([kraken_bin, "-r", *pairs, "segment", "-bl", "ocr", "-m", self.model])
+            return [(Path(tmp) / f"out_{i:03d}.txt").read_text(encoding="utf-8").strip() for i in range(len(images))]
 
     def settings(self) -> dict:
         return {"model": self.model}
@@ -123,20 +136,27 @@ class CalamariEngine(Engine):
         stem = Path(self.checkpoints[0]).parent.name or Path(self.checkpoints[0]).stem
         return f"calamari:{stem}" + (f"x{len(self.checkpoints)}" if len(self.checkpoints) > 1 else "")
 
-    def transcribe(self, image: Image.Image) -> str:
+    def transcribe_many(self, images: list) -> list:
         calamari_bin = self.calamari_bin or os.environ.get("CALAMARI_BIN", "calamari-predict")
-        lines = kraken_segment(image, self.kraken_bin)
-        if not lines:
-            return ""
+        segs = kraken_segment(images, self.kraken_bin)
         with tempfile.TemporaryDirectory() as tmp:
-            paths = []
-            for i, boundary in enumerate(lines):
-                p = Path(tmp) / f"line_{i:04d}.png"
-                crop_line(image, boundary).convert("L").save(p)
-                paths.append(p)
-            _run([calamari_bin, "--checkpoint", *self.checkpoints, "--data.images", *map(str, paths)])
-            preds = [p.with_suffix(".pred.txt") for p in paths]
-            return "\n".join(p.read_text(encoding="utf-8").strip() if p.exists() else "" for p in preds).strip()
+            per_image, paths = [], []
+            for i, (img, lines) in enumerate(zip(images, segs)):
+                own = []
+                for j, boundary in enumerate(lines):
+                    p = Path(tmp) / f"img{i:03d}_line{j:04d}.png"
+                    crop_line(img, boundary).convert("L").save(p)
+                    own.append(p)
+                per_image.append(own)
+                paths += own
+            if paths:
+                _run([calamari_bin, "--checkpoint", *self.checkpoints, "--data.images", *map(str, paths)])
+
+            def read(p):
+                pred = p.with_suffix(".pred.txt")
+                return pred.read_text(encoding="utf-8").strip() if pred.exists() else ""
+
+            return ["\n".join(read(p) for p in own).strip() for own in per_image]
 
     def settings(self) -> dict:
         return {"checkpoints": self.checkpoints}

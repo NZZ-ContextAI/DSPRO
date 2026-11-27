@@ -59,7 +59,7 @@ def transcribe_page(exp: Path, engine, page: dict) -> dict:
     from PIL import Image
 
     t0 = time.time()
-    texts = [engine.transcribe(Image.open(exp / "tiles" / f"{t}.jpg")) for t in tile_ids(page)]
+    texts = engine.transcribe_many([Image.open(exp / "tiles" / f"{t}.jpg") for t in tile_ids(page)])
     return {"page_id": page["page_id"], "year": page["year"], "model": engine.spec,
             "served_by": [engine.spec], "seconds": round(time.time() - t0, 1), "usage": {},
             "settings": engine.settings(), "tile_texts": texts, "text": "\n".join(texts)}
